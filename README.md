@@ -1,8 +1,8 @@
-### What is it?
+### Добро пожаловать
 
 ----
 
-**Manifests and scripts for use all Selectel services**
+**Манифесты для создания Cloud Native приложения c помощью Kubernetes и DBaaS**
 
 ----
 
