@@ -1,0 +1,20 @@
+apiversion: v1
+kind: Pod
+metadata:
+  name: life
+  labels:
+    app: life
+spec:
+  containers:
+  - image: cr.selcloud.ru/gameoflife/life:v2
+    name: life
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "128m"
+      limits:
+        memory: "128Mi"
+        cpu: "256m"
+  restartPolicy: Always
+  imagePullSecrets:
+    - name: regcred
