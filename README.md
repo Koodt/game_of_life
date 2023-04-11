@@ -51,7 +51,7 @@ terraform apply -var-file=secrets.tfvars -target=module.MKS
 
 ```
 
-Сходить в панель управления и в нужном проекте на вкладке Kubernetes выбрать свой кластер, скачать kubeconfig и положить его с именем config в директорию files/kube текущего репозитория.
+Сходить в панель управления и в нужном проекте на вкладке Kubernetes [выбрать свой кластер](https://my.selectel.ru/vpc/), скачать kubeconfig и положить его с именем config в директорию files/kube текущего репозитория.
 
 
 ### Stage 3
