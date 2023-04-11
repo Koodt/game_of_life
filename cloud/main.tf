@@ -96,6 +96,8 @@ apt install -y \
   python3-setuptools \
   python3-dev
 
+pip3 install --upgrade pip
+
 pip3 install \
   setuptools \
   wheel \
