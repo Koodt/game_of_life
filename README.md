@@ -19,6 +19,8 @@
 
 Создать новый реестр Container registry и получить новый токен.
 
+## Prerequisites
+
 Выполнить подготовку инфраструктуры
 
 ```
@@ -40,6 +42,8 @@ terraform apply -var-file=secrets.tfvars -target=module.DBaaS
 
 ### Stage 2
 
+## MKS
+
 Создать кластер MKS
 
 ```
@@ -52,7 +56,7 @@ terraform apply -var-file=secrets.tfvars -target=module.MKS
 
 ### Stage 3
 
-Cloud
+## Cloud
 
 ```
 terraform apply -var-file=secrets.tfvars -target=module.Cloud
