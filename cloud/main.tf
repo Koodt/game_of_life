@@ -1,110 +1,34 @@
-### Network
-## Get external network
-data "openstack_networking_network_v2" "external_net" {
-  name = "external-network"
-}
-
-## Create router with access to external network
-resource "openstack_networking_router_v2" "main_router" {
-  name                = "main_router"
-  external_network_id = data.openstack_networking_network_v2.external_net.id
-}
-
-## Create isolate network
-resource "openstack_networking_network_v2" "main_network" {
-  name = "main_network"
-}
-
-## Create subnet for private network
-resource "openstack_networking_subnet_v2" "main_subnet" {
-  network_id      = openstack_networking_network_v2.main_network.id
-  name            = "10.20.30.0/24"
-  cidr            = "10.20.30.0/24"
-  enable_dhcp     = false
-  dns_nameservers = ["188.93.16.19", "188.93.17.19"]
-}
-
-## Create subnet for ext network
-resource "openstack_networking_subnet_v2" "ext_subnet" {
-  network_id      = openstack_networking_network_v2.main_network.id
-  name            = "10.50.90.0/24"
-  cidr            = "10.50.90.0/24"
-  enable_dhcp     = false
-  dns_nameservers = ["188.93.16.19", "188.93.17.19"]
-}
-
-
-## Router's port for private net
-resource "openstack_networking_port_v2" "main_subnet_main_router_port" {
-  name       = "main_subnet_main_router_port"
-  network_id = openstack_networking_network_v2.main_network.id
-
-  fixed_ip {
-    subnet_id  = openstack_networking_subnet_v2.main_subnet.id
-    ip_address = "10.20.30.1"
-  }
-}
-
-## Router's port for ext net
-resource "openstack_networking_port_v2" "ext_subnet_main_router_port" {
-  name       = "ext_subnet_main_router_port"
-  network_id = openstack_networking_network_v2.main_network.id
-
-  fixed_ip {
-    subnet_id  = openstack_networking_subnet_v2.ext_subnet.id
-    ip_address = "10.50.90.1"
-  }
-}
+### Control node
 
 ## Control node's private port
 resource "openstack_networking_port_v2" "main_subnet_control_node_port" {
   name       = "main_subnet_main_router_port"
-  network_id = openstack_networking_network_v2.main_network.id
+  network_id = var.main_network_id
 
   fixed_ip {
-    subnet_id  = openstack_networking_subnet_v2.main_subnet.id
+    subnet_id  = var.main_subnet_id
     ip_address = "10.20.30.10"
   }
+}
+
+## Image ID
+data "openstack_images_image_v2" "ubuntu" {
+  name        = "Ubuntu 18.04 LTS 64-bit"
+  visibility  = "public"
+  most_recent = true
 }
 
 ## Control node's ext port
 resource "openstack_networking_port_v2" "ext_subnet_control_node_port" {
   name       = "ext_subnet_main_router_port"
-  network_id = openstack_networking_network_v2.main_network.id
+  network_id = var.main_network_id
 
   fixed_ip {
-    subnet_id  = openstack_networking_subnet_v2.ext_subnet.id
+    subnet_id  = var.ext_subnet_id
     ip_address = "10.50.90.10"
   }
 }
 
-
-## Router's port attachment for private net
-resource "openstack_networking_router_interface_v2" "main_router_external_port_for_private" {
-  router_id = openstack_networking_router_v2.main_router.id
-  port_id   = openstack_networking_port_v2.main_subnet_main_router_port.id
-}
-
-## Router's port attachment for ext net
-resource "openstack_networking_router_interface_v2" "main_router_external_port_for_ext" {
-  router_id = openstack_networking_router_v2.main_router.id
-  port_id   = openstack_networking_port_v2.ext_subnet_main_router_port.id
-}
-
-## Keypair
-resource "selectel_vpc_keypair_v2" "keypair_1" {
-  name       = var.keypair_name
-  public_key = var.keypair_public_key
-  user_id    = var.keypair_user_id
-
-  lifecycle {
-    ignore_changes = [
-      regions
-    ]
-  }
-}
-
-### Control node
 ## Get flavor
 resource "openstack_networking_floatingip_v2" "control_node_floating" {
   pool = "external-network"
@@ -122,7 +46,7 @@ resource "openstack_compute_instance_v2" "control_node" {
   name              = "control_node"
   flavor_id         = data.openstack_compute_flavor_v2.control_node_flavor.id
   key_pair          = var.keypair_name
-  image_id          = "a456436d-3321-4c35-b96c-86a873a6ced3"
+  image_id          = data.openstack_images_image_v2.ubuntu.id
   availability_zone = var.availability_zone
 
   network {
@@ -169,6 +93,7 @@ apt install -y \
   jq \
   python3-pip \
   libpq-dev \
+  python3-setuptools \
   python3-dev
 
 pip3 install \

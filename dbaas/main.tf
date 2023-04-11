@@ -25,11 +25,11 @@ resource "selectel_dbaas_datastore_v1" "datastore_1" {
   region     = var.region
   type_id    = data.selectel_dbaas_datastore_type_v1.dt.datastore_types[0].id
   subnet_id  = data.openstack_networking_subnet_v2.subnet_for_dbaas.id
-  node_count = 3
+  node_count = 1
   flavor {
-    vcpus = 4
+    vcpus = 2
     ram   = 4096
-    disk  = 32
+    disk  = 16
   }
   pooler {
     mode = "transaction"
