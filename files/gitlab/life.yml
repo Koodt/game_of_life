@@ -6,7 +6,7 @@ metadata:
     app: life
 spec:
   containers:
-  - image: cr.selcloud.ru/gameoflife/life:v2
+  - image: cr.selcloud.ru/gameoflife/life:latest
     name: life
     resources:
       requests:

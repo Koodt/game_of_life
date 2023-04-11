@@ -1,0 +1,98 @@
+default:
+  tags:
+    - shell
+
+stages:
+  - check
+  - linter
+  - prepare
+  - kube check
+  - kube validate
+  - run
+  - stop
+
+black linter:
+  stage: linter
+  script:
+    - black --diff --check .
+  needs:
+    - shell test
+
+flake linter:
+  stage: linter
+  script:
+    - flake8 .
+  needs:
+    - shell test
+
+isort linter:
+  stage: linter
+  script:
+    - isort --check-only --diff .
+  needs:
+    - shell test
+
+prepare db:
+    stage: prepare
+    script:
+        - python3 python/prepare.py
+    needs:
+      - black linter
+      - flake linter
+      - isort linter
+    when: manual
+
+prepare image:
+  stage: prepare
+  script:
+    - docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD $REGISTRY_HOST
+    - docker build -t $REGISTRY_HOST/terratest/life:latest image/. --build-arg DATABASE_HOST="$DATABASE_HOST" --build-arg DATABASE_USER="$DATABASE_USER" --build-arg DATABASE_PASSWORD="$DATABASE_PASSWORD"
+    - docker push $REGISTRY_HOST/terratest/life:latest
+  needs:
+    - black linter
+    - flake linter
+    - isort linter
+
+shell test:
+  stage: check
+  script:
+    - hostname
+    - python3 --version
+
+kube test:
+  stage: kube check
+  script:
+    - kubectl version --output=json |jq .
+
+kube validate:
+  stage: kube validate
+  script:
+    - kubeval $KUBE_VALIDATE_FILE
+  needs:
+    - kube test
+    - prepare image
+
+kube run stage:
+  stage: run
+  script:
+    - kubectl apply -f kube/pod.yml
+  needs:
+    - kube validate
+  allow_failure: false
+
+kube run prod:
+  stage: run
+  script:
+    - kubectl apply -f kube/pod.yml
+  needs:
+    - kube validate
+  allow_failure: false
+  when: manual
+
+disable:
+  stage: stop
+  script:
+    - kubectl delete --all pods --grace-period=0 --force
+  needs:
+    - kube run stage
+  when: manual
