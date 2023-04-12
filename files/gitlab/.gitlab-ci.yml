@@ -2,64 +2,99 @@ default:
   tags:
     - shell
 
+variables:
+  IMAGE_NAME: "life"
+  IMAGE_TAG: "latest"
+
 stages:
   - check
   - linter
+  - tests
   - prepare
   - kube check
   - kube validate
   - run
   - stop
 
+shell check:
+  stage: check
+  script:
+    - hostname
+    - python3 --version
+
 black linter:
   stage: linter
   script:
     - black --diff --check .
   needs:
-    - shell test
+    - shell check
 
 flake linter:
   stage: linter
   script:
     - flake8 .
   needs:
-    - shell test
+    - shell check
 
 isort linter:
   stage: linter
   script:
     - isort --check-only --diff .
   needs:
-    - shell test
+    - shell check
 
-prepare db:
-    stage: prepare
-    script:
-        - python3 python/prepare.py
-    needs:
-      - black linter
-      - flake linter
-      - isort linter
-    when: manual
-
-prepare image:
-  stage: prepare
+python tests:
+  stage: tests
   script:
-    - docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD $REGISTRY_HOST
-    - docker build -t $REGISTRY_HOST/terratest/life:latest image/. --build-arg DATABASE_HOST="$DATABASE_HOST" --build-arg DATABASE_USER="$DATABASE_USER" --build-arg DATABASE_PASSWORD="$DATABASE_PASSWORD"
-    - docker push $REGISTRY_HOST/terratest/life:latest
+    - python3 -m pytest --junitxml=report.xml tests/*
+  artifacts:
+    reports:
+      junit: report.xml
+    expire_in: 2 week
   needs:
     - black linter
     - flake linter
     - isort linter
 
-shell test:
-  stage: check
+coverage tests:
+  stage: tests
   script:
-    - hostname
-    - python3 --version
+    - coverage run -m pytest tests/*
+    - coverage report
+    - coverage xml
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    expire_in: 2 week
+  needs:
+    - python tests
 
-kube test:
+prepare db:
+    stage: prepare
+    script:
+        - python3 database/prepare.py
+    needs:
+      - coverage tests
+    when: manual
+
+prepare image:
+  stage: prepare
+  variables:
+    DOCKER_IMAGE_PATH: $REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+  script:
+    - docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD $REGISTRY
+    - docker build -t $DOCKER_IMAGE_PATH image/.
+      --build-arg DATABASE_HOST="$DATABASE_HOST"
+      --build-arg DATABASE_USER="$DATABASE_USER"
+      --build-arg DATABASE_PASSWORD="$DATABASE_PASSWORD"
+    - docker push $DOCKER_IMAGE_PATH
+  needs:
+    - coverage tests
+
+kube check:
   stage: kube check
   script:
     - kubectl version --output=json |jq .
@@ -69,7 +104,7 @@ kube validate:
   script:
     - kubeval $KUBE_VALIDATE_FILE
   needs:
-    - kube test
+    - kube check
     - prepare image
 
 kube run stage:
