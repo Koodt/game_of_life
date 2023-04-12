@@ -124,7 +124,7 @@ kube run prod:
   allow_failure: false
   when: manual
 
-disable:
+kube stop stage:
   stage: stop
   script:
     - kubectl delete --all pods --grace-period=0 --force
