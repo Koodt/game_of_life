@@ -51,8 +51,7 @@ terraform apply -var-file=secrets.tfvars -target=module.MKS
 
 ```
 
-Сходить в панель управления и в нужном проекте на вкладке Kubernetes [выбрать свой кластер](https://my.selectel.ru/vpc/), скачать kubeconfig и положить его с именем config в директорию files/kube текущего репозитория.
-
+Во время выполнения этой части, будет локально сохранен kubeconfig. Он будет скопирован на control node в следующем шаге.
 
 ### Stage 3
 
@@ -60,6 +59,17 @@ terraform apply -var-file=secrets.tfvars -target=module.MKS
 
 ```
 terraform apply -var-file=secrets.tfvars -target=module.Cloud
+
+```
+
+Для того, чтобы кластер MKS мог скачивать образы из CRaaS, нужно добавить ключ. Для этого потребуется выполнить две команды. Обратите внимание, что во второй команде нужно передать путь до конифга находящегося в домашней папке пользователя.
+
+```
+docker login cr.selcloud.ru
+
+kubectl create secret generic regcred \
+    --from-file=.dockerconfigjson=~/.docker/config.json \
+    --type=kubernetes.io/dockerconfigjson
 
 ```
 

@@ -1,6 +1,7 @@
 ### Custom ###
 secrets.tfvars
 */kube/config
+kubeconfig
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

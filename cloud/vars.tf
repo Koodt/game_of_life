@@ -11,3 +11,5 @@ variable "main_network_id" {}
 variable "main_subnet_id" {}
 
 variable "ext_subnet_id" {}
+
+variable "kubeconfig" {}

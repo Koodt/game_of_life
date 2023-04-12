@@ -18,6 +18,12 @@ data "openstack_images_image_v2" "ubuntu" {
   most_recent = true
 }
 
+## Create kubeconfig
+resource "local_file" "kubeconfig" {
+    content  = var.kubeconfig
+    filename = "kubeconfig"
+}
+
 ## Control node's ext port
 resource "openstack_networking_port_v2" "ext_subnet_control_node_port" {
   name       = "ext_subnet_main_router_port"
@@ -159,7 +165,7 @@ EOF
   }
 
   provisioner "file" {
-    source      = "files/kube/config"
+    source      = "kubeconfig"
     destination = "/root/.kube/config"
 
     connection {
@@ -171,7 +177,7 @@ EOF
   }
 
   provisioner "file" {
-    source      = "files/kube/config"
+    source      = "kubeconfig"
     destination = "/home/gitlab-runner/.kube/config"
 
     connection {
@@ -183,7 +189,8 @@ EOF
   }
 
   depends_on = [
-    openstack_networking_floatingip_v2.control_node_floating
+    openstack_networking_floatingip_v2.control_node_floating,
+    local_file.kubeconfig
   ]
 
 }

@@ -61,4 +61,5 @@ module "Cloud" {
   keypair_name       = var.keypair_name
   keypair_public_key = file("~/.ssh/id_rsa.pub")
   availability_zone  = var.availability_zone
+  kubeconfig         = module.MKS.kubeconfig
 }

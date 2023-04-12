@@ -24,3 +24,10 @@ resource "selectel_mks_nodegroup_v1" "nodegroup_1" {
   volume_type       = var.volume_type
   labels            = var.labels
 }
+
+## Kubeconfig
+data "selectel_mks_kubeconfig_v1" "kubeconfig" {
+  cluster_id  = selectel_mks_cluster_v1.cluster_1.id
+  project_id  = var.project_id
+  region      = var.region
+}
