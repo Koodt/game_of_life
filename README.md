@@ -5,6 +5,14 @@
 **Манифесты для создания Cloud Native приложения c помощью Kubernetes и DBaaS**
 
 ----
+![image](https://user-images.githubusercontent.com/58259937/231564744-7e03bfb2-7ceb-46b9-a90f-1e05620b4dc7.png)
+
+Приложение работает в Managed Kubernetes, образ контейнера в Container Registry. Визуализация в Grafana , которая развернута на отдельной виртуальной машине, на которой также развернут GitLab.
+Данные для приложения в PostgreSQL, которая работает в Managed Database.
+
+Наша задача:
+Подготовить pipeline в Gitlab, с помощью которого будет автоматизирован процесс сборки и деплоя приложения (build → push → deploy)
+
 
 ### Stage 0
 
