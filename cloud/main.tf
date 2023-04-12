@@ -137,12 +137,15 @@ docker run \
     gitlab/gitlab-ce:latest
 
 mkdir /root/.kube/
-mkdir /home/gitlab-runner/.kube/
 
 wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
 tar xf kubeval-linux-amd64.tar.gz
 chmod +x ./kubeval
 cp kubeval /usr/local/bin
+
+mkdir /home/gitlab-runner/.kube/
+usermod -aG docker gitlab-runner
+service docker restart
 
 EOF
     ]
